@@ -1,0 +1,38 @@
+FROM openjdk:8u242-jre
+
+RUN curl http://mirrors.ocf.berkeley.edu/apache/rocketmq/4.6.0/rocketmq-all-4.6.0-bin-release.zip -o rocketmq-all-4.6.0-bin-release.zip
+
+RUN unzip rocketmq-all-4.6.0-bin-release.zip
+
+WORKDIR /rocketmq-all-4.6.0-bin-release
+
+ADD broker_conf_generate.sh ./
+
+ENV NAMESRVADDR=localhost:9876 \
+    \
+    LISTENPORT=10911 \
+    BROKERIP1= \
+    BROKERNAME= \
+    BROKERCLUSTERNAME=DefaultCluster \
+    BROKERID=0 \
+    STOREPATHCOMMITLOG=~/store/commitlog/ \
+    STOREPATHCONSUMERQUEUE=~/store/consumequeue/ \
+    MAPEDFILESIZECOMMITLOG=1073741824 \
+    DELETEWHEN=4 \
+    FILERESERVERDTIME=72 \
+    BROKERROLE=ASYNC_MASTER \
+    FLUSHDISKTYPE=ASYNC_FLUSH \
+    \
+    ENABLEDLEGERCOMMITLOG=true \
+    DLEGERGROUP=RaftNode00 \
+    DLEGERPEERS=n0-127.0.0.1:40911;n1-127.0.0.1:40912;n2-127.0.0.1:40913 \
+    DLEGERSELFID=n0 \
+    SENDMESSAGETHREADPOOLNUMS=8
+
+
+# ENV JAVA_OPT=" -server -Xms1g -Xmx1g -Xmn1g "
+# ENV JAVA_OPT_EXT=" -server -Xms1g -Xmx1g -Xmn1g "
+
+ENTRYPOINT  sh broker_conf_generate.sh && sh bin/mqbroker -n $NAMESRVADDR -c conf/broker.conf
+
+# ENTRYPOINT  nohup sh bin/mqbroker -n $NAMESRV &&  sleep 5 &&  tail -f ~/logs/rocketmqlogs/broker.log 
